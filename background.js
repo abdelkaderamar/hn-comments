@@ -52,7 +52,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
   if (info.menuItemId === "export-to-text") {
-    console.log("Export to text");
+    exportToText();
     return;
   }
   if (info.menuItemId === "export-to-yaml") {
@@ -113,4 +113,65 @@ function showHnClipboard() {
       url: chrome.runtime.getURL('hn_clipboard.html')
     }
   );
+}
+
+function cleanLinksText(element)
+{
+  a_elts = element.querySelectorAll("a");
+  for (a of a_elts) {
+    console.log(a.getAttribute("href"));
+    a.innerText = " " + a.getAttribute("href") + " ";
+  }
+  console.log(element)
+}
+
+function stripHTML(html)
+{
+   let tmp = document.createElement("div");
+   tmp.innerHTML = html;
+   cleanLinksText(tmp);
+   return tmp.textContent || tmp.innerText || "";
+}
+
+function exportToText() {
+  console.log("Export to text");
+  chrome.storage.local.get(["hn_clipboard"], function(items) {
+    fileContent = "";
+    for (selection of items.hn_clipboard) {
+      console.log(selection);
+      fileContent += stripHTML(selection) + '\n' + '-------------------------\n';
+    }
+    console.log("File content:");
+    console.log(fileContent);
+
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      filename = "hn-story.txt";
+      var currentTab = tabs[0];
+      var currentTabUrl = currentTab.url;
+      console.log(currentTabUrl);
+      storyId = currentTabUrl.replace(
+        "https://news.ycombinator.com/item?id=",
+        ""
+      );
+      console.log("currentTabUrl = ", currentTabUrl);
+      console.log("storyId       = ", storyId);
+      if (storyId != currentTabUrl) {
+        filename = `hn-story-${storyId}.txt`;
+      }
+      console.log("Filename = ", filename);
+
+      chrome.downloads.download(
+        {
+          url: "data:text/plain," + encodeURIComponent(fileContent),
+          filename: filename,
+          conflictAction: "prompt",
+        },
+        function (downloadId) {
+          console.log("File has been saved with ID: " + downloadId);
+          chrome.downloads.showDefaultFolder(downloadId);
+        }
+      );
+    });
+
+  });
 }
