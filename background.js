@@ -168,10 +168,22 @@ function exportToText() {
         },
         function (downloadId) {
           console.log("File has been saved with ID: " + downloadId);
-          chrome.downloads.showDefaultFolder(downloadId);
+          // not recognized
+          // chrome.downloads.showDefaultFolder(downloadId);
         }
       );
     });
 
   });
 }
+
+chrome.commands.onCommand.addListener((command) => {
+  console.log(`# Command "${command}" triggered`);
+  console.log(command);
+  if (command === "add-selected") {
+    addSelectionToClipboard();
+  }
+  else if (command == "export-clipboard") {
+    exportToText();
+  }
+});
