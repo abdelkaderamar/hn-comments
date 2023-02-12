@@ -48,6 +48,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
   if (info.menuItemId === "show-hn-clipboard") {
     console.log("Show clipboard: ", info);
+    showHnClipboard();
     return;
   }
   if (info.menuItemId === "export-to-text") {
@@ -60,6 +61,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
   if (info.menuItemId === "clear-hn-clipboard") {
     console.log("Clear HN clipboard");
+    clearHnClipboard();
     return;
   }
 });
@@ -81,16 +83,34 @@ function addSelectionToClipboard() {
           console.warn("No response received");
           return;
         }
+        console.log("response.body         = ", response.body);
+        console.log("typeof(response.body) = ", typeof(response.body));
         HnClipboard.push(response.body);
         chrome.storage.local.set({ hn_clipboard: HnClipboard }, function () {
-          console.log("Value is set to " + HnClipboard);
+          console.log("Value is set to ", HnClipboard);
         });
 
         chrome.storage.local.get(["hn_clipboard"], function (items) {
           console.log("#1 ", items);
+          console.log("#1 ", items.hn_clipboard);
           console.log("#1 Type = ", typeof items);
         });
       }
     );
   });
+}
+
+function clearHnClipboard() {
+  HnClipboard = new Array();
+  chrome.storage.local.set({ hn_clipboard: HnClipboard }, function () {
+    console.log("Value is set to " + HnClipboard);
+  });
+}
+
+function showHnClipboard() {
+  chrome.tabs.create(
+    {
+      url: chrome.runtime.getURL('hn_clipboard.html')
+    }
+  );
 }
