@@ -20,62 +20,14 @@ function addMenuSeparator(id) {
   });
 }
 
-// chrome.contextMenus.create({
-//   id: "add-to-hn-clipboard",
-//   title: "Add selection to HN clipboard",
-//   contexts: ["selection"],
-//   documentUrlPatterns: hn_filter,
-// });
-
-// chrome.contextMenus.create({
-//   id: "extract-comments-with-links",
-//   title: "Add comments with links to HN clipboard",
-//   contexts: ["all"],
-//   documentUrlPatterns: hn_filter,
-// });
-
-// chrome.contextMenus.create({
-//   id: "show-hn-clipboard",
-//   title: "Show HN clipboard",
-//   contexts: ["all"],
-//   documentUrlPatterns: hn_filter,
-// });
-
-// chrome.contextMenus.create({
-//   id: "separator-1",
-//   type: "separator",
-//   documentUrlPatterns: hn_filter,
-// });
-
-// chrome.contextMenus.create({
-//   id: "export-to-text",
-//   title: "Export to text",
-//   contexts: ["all"],
-//   documentUrlPatterns: hn_filter,
-// });
-
-// chrome.contextMenus.create({
-//   id: "export-to-yaml",
-//   title: "Export to YAML",
-//   contexts: ["all"],
-//   documentUrlPatterns: hn_filter,
-// });
-
-// chrome.contextMenus.create({
-//   id: "separator-2",
-//   type: "separator",
-//   documentUrlPatterns: hn_filter,
-// });
-
-// chrome.contextMenus.create({
-//   id: "clear-hn-clipboard",
-//   title: "Clear HN clipboard",
-//   contexts: ["all"],
-//   documentUrlPatterns: hn_filter,
-// });
-
-addMenuItem("add-to-hn-clipboard", "Add selection to HN clipboard", ["selection"]);
-addMenuItem("extract-comments-with-links","Add comments with links to HN clipboard", ["all"]);
+addMenuItem("add-to-hn-clipboard", "Add selection to HN clipboard", [
+  "selection",
+]);
+addMenuItem(
+  "extract-comments-with-links",
+  "Add comments with links to HN clipboard",
+  ["all"]
+);
 addMenuSeparator(1);
 addMenuItem("show-hn-clipboard", "Show to HN clipboard", ["all"]);
 addMenuSeparator(2);
@@ -86,7 +38,8 @@ addMenuItem("clear-hn-clipboard", "Clear HN clipboard", ["all"]);
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "add-to-hn-clipboard") {
-    console.log("Add selection to clipboard: ", info);
+    console.log("Add selection to clipboard: ", info, tab);
+    addSelectionToClipboard(info, tab);
     return;
   }
   if (info.menuItemId === "extract-comments-with-links") {
@@ -110,3 +63,34 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
 });
+
+function addSelectionToClipboard() {
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  chrome.tabs.query(queryOptions, (tabs) => {
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError);
+    }
+    const tab = tabs[0];
+    chrome.tabs.sendMessage(
+      tab.id,
+      { command: "get-selected-text" },
+      function (response) {
+        console.log("Receiving response ", response);
+        console.log("typeof response = ", typeof(response));
+        if (response === null) {
+          console.warn("No response received");
+          return;
+        }
+        HnClipboard.push(response.body);
+        chrome.storage.local.set({ hn_clipboard: HnClipboard }, function () {
+          console.log("Value is set to " + HnClipboard);
+        });
+
+        chrome.storage.local.get(["hn_clipboard"], function (items) {
+          console.log("#1 ", items);
+          console.log("#1 Type = ", typeof items);
+        });
+      }
+    );
+  });
+}
