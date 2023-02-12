@@ -43,7 +43,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
   if (info.menuItemId === "extract-comments-with-links") {
-    console.log("Extract comments with links: ", info);
+    extractCommantsWithLinks();
     return;
   }
   if (info.menuItemId === "show-hn-clipboard") {
@@ -177,6 +177,29 @@ function exportToText() {
   });
 }
 
+function extractCommantsWithLinks() {
+  console.log("Extract comments with links: ");
+  let queryOptions = { active: true, lastFocusedWindow: true };
+  chrome.tabs.query(queryOptions, (tabs) => {
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError);
+    }
+    const tab = tabs[0];
+    chrome.tabs.sendMessage(
+      tab.id,
+      { command: "get-comments-with-links" },
+      function (response) {
+        console.log("Receiving a response: ", response);
+        for (comment of response.comments) {
+          console.log(comment);
+          HnClipboard.push(comment);
+          chrome.storage.local.set({ hn_clipboard: HnClipboard }, function () {
+            console.log("Value is set to ", HnClipboard);
+          });
+        }
+      });
+    });
+}
 chrome.commands.onCommand.addListener((command) => {
   console.log(`# Command "${command}" triggered`);
   console.log(command);
@@ -187,3 +210,4 @@ chrome.commands.onCommand.addListener((command) => {
     exportToText();
   }
 });
+

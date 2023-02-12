@@ -40,6 +40,30 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
       url: window.location.href,
       subject: document.title});
   }
+  else if (msg.command === "get-comments-with-links") {
+    console.log("Extract comments with link");
+    spans = document.querySelectorAll('span.commtext');
+    console.log("spans = ", spans);
+    spansWithLink = new Array();
+    for (let i = 0; i < spans.length; i++) {
+      span = spans[i].cloneNode(true);
+      // href=^"reply?" => href start with reply?
+      const hasLink = span.querySelector('a:not([href^="reply?"])');
+      if (hasLink) {
+        const replies = span.querySelectorAll('a[href^="reply?"]');
+        console.log("Replies = ", replies);
+        for (let reply of  replies) {
+          console.log("removing ", reply);
+          reply.remove();
+        }
+        spansWithLink.push(span.innerHTML);
+      }
+    }
+    console.log("spansWithLink = ", spansWithLink);
+    sendResponse({
+      comments: spansWithLink
+    });
+  }
   else {
     sendResponse(null);
   }
