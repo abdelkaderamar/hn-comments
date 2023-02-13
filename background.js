@@ -1,6 +1,9 @@
 const hn_filter = ["https://news.ycombinator.com/*", "*://*/clipboard.html"];
 
-let HnClipboard = new Array();
+console.log("Initialising the clipboard");
+chrome.storage.local.set({ hn_clipboard: new Array() }, function () {
+  console.log("Clipboard initialized");
+});
 
 function addMenuItem(id, title, contexts) {
   chrome.contextMenus.create({
@@ -85,9 +88,11 @@ function addSelectionToClipboard() {
         }
         console.log("response.body         = ", response.body);
         console.log("typeof(response.body) = ", typeof(response.body));
-        HnClipboard.push(response.body);
-        chrome.storage.local.set({ hn_clipboard: HnClipboard }, function () {
-          console.log("Value is set to ", HnClipboard);
+        chrome.storage.local.get(["hn_clipboard"], function (items) {
+          items.hn_clipboard.push(response.body);
+          chrome.storage.local.set({ hn_clipboard: items.hn_clipboard }, function () {
+            console.log("Value is set to ", items.hn_clipboard);
+          });
         });
 
         chrome.storage.local.get(["hn_clipboard"], function (items) {
@@ -139,6 +144,9 @@ function exportToText() {
   chrome.storage.local.get(["hn_clipboard"], function(items) {
     fileContent = "";
     for (selection of items.hn_clipboard) {
+      if (selection === null) {
+        continue;
+      }
       console.log(selection);
       fileContent += stripHTML(selection).trim() + '\n' + '-------------------------\n';
     }
@@ -183,6 +191,9 @@ function exportToYaml() {
   chrome.storage.local.get(["hn_clipboard"], function(items) {
     fileContent = "";
     for (selection of items.hn_clipboard) {
+      if (selection === null) {
+        continue;
+      }
       console.log(selection);
       const textContent = stripHTML(selection);
       lines = textContent.trim().split('\n');
@@ -247,16 +258,23 @@ function extractCommantsWithLinks() {
       { command: "get-comments-with-links" },
       function (response) {
         console.log("Receiving a response: ", response);
-        for (comment of response.comments) {
-          console.log(comment);
-          HnClipboard.push(comment);
-          chrome.storage.local.set({ hn_clipboard: HnClipboard }, function () {
-            console.log("Value is set to ", HnClipboard);
-          });
-        }
-      });
-    });
+        chrome.storage.local.get(["hn_clipboard"], function (items) {
+          for (comment of response.comments) {
+            console.log(comment);
+            items.hn_clipboard.push(comment);
+          }
+          chrome.storage.local.set(
+            { hn_clipboard: items.hn_clipboard },
+            function () {
+              console.log("Value is set to ", items.hn_clipboard);
+            }
+          );
+        });
+      }
+    );
+  });
 }
+
 chrome.commands.onCommand.addListener((command) => {
   console.log(`# Command "${command}" triggered`);
   console.log(command);
