@@ -56,7 +56,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
   if (info.menuItemId === "export-to-yaml") {
-    console.log("Export to YAML");
+    exportToYaml();
     return;
   }
   if (info.menuItemId === "clear-hn-clipboard") {
@@ -130,7 +130,8 @@ function stripHTML(html)
    let tmp = document.createElement("div");
    tmp.innerHTML = html;
    cleanLinksText(tmp);
-   return tmp.textContent || tmp.innerText || "";
+   tmp.innerHTML = tmp.innerHTML.replace('<p>', '\n</p>');
+   return  tmp.textContent || tmp.innerText || "";
 }
 
 function exportToText() {
@@ -139,7 +140,7 @@ function exportToText() {
     fileContent = "";
     for (selection of items.hn_clipboard) {
       console.log(selection);
-      fileContent += stripHTML(selection) + '\n' + '-------------------------\n';
+      fileContent += stripHTML(selection).trim() + '\n' + '-------------------------\n';
     }
     console.log("File content:");
     console.log(fileContent);
@@ -164,6 +165,62 @@ function exportToText() {
         {
           url: "data:text/plain," + encodeURIComponent(fileContent),
           filename: filename,
+          conflictAction: "prompt",
+        },
+        function (downloadId) {
+          console.log("File has been saved with ID: " + downloadId);
+          // not recognized
+          // chrome.downloads.showDefaultFolder(downloadId);
+        }
+      );
+    });
+
+  });
+}
+
+function exportToYaml() {
+  console.log("Export to YAML");
+  chrome.storage.local.get(["hn_clipboard"], function(items) {
+    fileContent = "";
+    for (selection of items.hn_clipboard) {
+      console.log(selection);
+      const textContent = stripHTML(selection);
+      lines = textContent.trim().split('\n');
+      let yamlDoc = 'comment: | \n';
+      for (line of lines) {
+        yamlDoc += ' ' + line + '\n';
+      }
+      yamlDoc += '---\n';
+      fileContent += yamlDoc;
+    }
+    console.log("File content:");
+    console.log(fileContent);
+
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      yamlFilename = "hn-story.yaml";
+      var currentTab = tabs[0];
+      var currentTabUrl = currentTab.url;
+
+      fileContent = '---' + '\n' + 
+        'url: ' + currentTabUrl + '\n' + 
+        '---' + '\n' +
+        fileContent;
+
+      storyId = currentTabUrl.replace(
+        "https://news.ycombinator.com/item?id=",
+        ""
+      );
+      console.log("currentTabUrl = ", currentTabUrl);
+      console.log("storyId       = ", storyId);
+      if (storyId != currentTabUrl) {
+        yamlFilename = `hn-story-${storyId}.yaml`;
+      }
+      console.log("Yaml Filename = ", yamlFilename);
+
+      chrome.downloads.download(
+        {
+          url: "data:text/yaml," + encodeURIComponent(fileContent),
+          filename: yamlFilename,
           conflictAction: "prompt",
         },
         function (downloadId) {
