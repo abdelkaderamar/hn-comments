@@ -60,8 +60,10 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
       }
     }
     console.log("spansWithLink = ", spansWithLink);
+    console.log("document.url = ", window.location.href);
     sendResponse({
-      comments: spansWithLink
+      comments: spansWithLink,
+      url: window.location.hef
     });
   }
   else {

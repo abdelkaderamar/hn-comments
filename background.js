@@ -2,26 +2,28 @@ const hn_filter = ["https://news.ycombinator.com/*"];
 
 const clipboard_filter = ["chrome-extension://lepieaakpbahcminjicfhaidjhdklomp/hn_clipboard.html"];
 
+const all_filter = hn_filter.concat(clipboard_filter);
+
 console.log("Initialising the clipboard");
 chrome.storage.local.set({ hn_clipboard: new Array() }, function () {
   console.log("Clipboard initialized");
 });
 
-function addMenuItem(id, title, contexts) {
+function addMenuItem(id, title, contexts, filter = hn_filter) {
   chrome.contextMenus.create({
     id: id,
     title: title,
     contexts: contexts,
-    documentUrlPatterns: hn_filter,
+    documentUrlPatterns: filter,
   });
 }
 
-function addMenuSeparator(id) {
+function addMenuSeparator(id, filter = hn_filter) {
   chrome.contextMenus.create({
     id: "separator-" + id,
     type: "separator",
     contexts: ["all"],
-    documentUrlPatterns: hn_filter,
+    documentUrlPatterns: filter,
   });
 }
 
@@ -36,17 +38,11 @@ addMenuItem(
 addMenuSeparator(1);
 addMenuItem("show-hn-clipboard", "Show to HN clipboard", ["all"]);
 addMenuSeparator(2);
-addMenuItem("export-to-text", "Export to text", ["all"]);
-addMenuItem("export-to-yaml", "Export to YAML", ["all"]);
-addMenuSeparator(3);
-addMenuItem("clear-hn-clipboard", "Clear HN clipboard", ["all"]);
-
-chrome.contextMenus.create({
-  id: "hn-clipboard-edit",
-  title: "Update selection",
-  contexts: ["selection"],
-  documentUrlPatterns: clipboard_filter,
-});
+addMenuItem("export-to-text", "Export to text", ["all"], all_filter);
+addMenuItem("export-to-yaml", "Export to YAML", ["all"], all_filter);
+addMenuSeparator(3, all_filter);
+addMenuItem("clear-hn-clipboard", "Clear HN clipboard", ["all"], all_filter);
+addMenuItem("hn-clipboard-edit", "Update selection", ["selection"], clipboard_filter);
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "add-to-hn-clipboard") {
