@@ -1,4 +1,6 @@
-const hn_filter = ["https://news.ycombinator.com/*", "*://*/clipboard.html"];
+const hn_filter = ["https://news.ycombinator.com/*"];
+
+const clipboard_filter = ["chrome-extension://lepieaakpbahcminjicfhaidjhdklomp/hn_clipboard.html"];
 
 console.log("Initialising the clipboard");
 chrome.storage.local.set({ hn_clipboard: new Array() }, function () {
@@ -38,6 +40,13 @@ addMenuItem("export-to-text", "Export to text", ["all"]);
 addMenuItem("export-to-yaml", "Export to YAML", ["all"]);
 addMenuSeparator(3);
 addMenuItem("clear-hn-clipboard", "Clear HN clipboard", ["all"]);
+
+chrome.contextMenus.create({
+  id: "hn-clipboard-edit",
+  title: "Update selection",
+  contexts: ["selection"],
+  documentUrlPatterns: clipboard_filter,
+});
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "add-to-hn-clipboard") {

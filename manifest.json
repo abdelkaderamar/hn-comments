@@ -12,7 +12,7 @@
   ],
   "content_scripts": [
     {
-      "matches": ["*://news.ycombinator.com/*", "*://*/clipboard.html"],
+      "matches": ["*://news.ycombinator.com/*", "*://*/hn_clipboard.html"],
       "js": ["hn-comments.js"]
     }
   ],
