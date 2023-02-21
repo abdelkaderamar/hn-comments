@@ -41,29 +41,6 @@ chrome.storage.local.get(["hn_clipboard"], function (items) {
     option_elt.setAttribute("value", key);
     option_elt.innerText = value.title;
     select_elt.appendChild(option_elt);
-    // for (let i = 0; i < value.comments.length; ++i) {
-    //   let item = value.comments[i];
-    //   if (item == null) {
-    //     continue;
-    //   }
-    //   console.log(item);
-    //   const card = document.createElement("div");
-    //   card.className = "card";
-    //   card.setAttribute("id", i);
-    //   const span = document.createElement("span");
-    //   span.innerHTML = item;
-    //   card.appendChild(span);
-    //   const closeBtn = document.createElement("button");
-    //   closeBtn.innerText = "X";
-    //   closeBtn.className = "remove-btn";
-    //   closeBtn.addEventListener("click", function () {
-    //     removeItem(closeBtn);
-    //   });
-    //   const btnDiv = document.createElement("div");
-    //   btnDiv.append(closeBtn);
-    //   card.append(btnDiv);
-    //   main_div.appendChild(card);
-    // }
   }
   chrome.storage.local.get(["current_story"], function(items) {
     console.log("Current story = ", items.current_story);
@@ -117,31 +94,21 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     chrome.storage.local.get(["hn_clipboard"], function (items) {
       // console.log("Removing the element with index ", idx);
       // delete items.hn_clipboard[idx];
-      items.hn_clipboard[idx] = selectedHTML;
-      selectedCard.innerHTML = selectedHTML;
-      console.log(items.hn_clipboard);
-      chrome.storage.local.set(
-        { hn_clipboard: items.hn_clipboard },
-        function () {
-          console.log("HN clipboard updated");
-        }
-      );
+      const storyId = main_div.getAttribute("story-id");
+      if (storyId in items.hn_clipboard) {
+        items.hn_clipboard[storyId].comments[idx] = selectedHTML;
+        selectedCard.innerHTML = selectedHTML;
+        console.log(items.hn_clipboard);
+        chrome.storage.local.set(
+          { hn_clipboard: items.hn_clipboard },
+          function () {
+            console.log("HN clipboard updated");
+          }
+        );
+      }
     });
   }
 });
-
-// chrome.runtime.onMessage.addListener((msg, sender) => {
-//   console.log(
-//     sender.tab
-//       ? " from a content script:" + sender.tab.url
-//       : " from the extension"
-//   );
-//   console.log(msg);
-//   if (msg.command === 'update-hn-selection') {
-//     console.log("Editing the selection");
-//     window.postMessage({result: "ok"}, "*");
-//   }
-// });
 
 function addCommentSelection(comment, id) {
   const card = document.createElement("div");
