@@ -63,7 +63,8 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     console.log("document.url = ", window.location.href);
     sendResponse({
       comments: spansWithLink,
-      url: window.location.hef
+      url: window.location.hef,
+      subject: document.title
     });
   }
   else {
