@@ -303,9 +303,24 @@ function extractCommantsWithLinks() {
       function (response) {
         console.log("Receiving a response: ", response);
         chrome.storage.local.get(["hn_clipboard"], function (items) {
+          storyId = getStoryId(tab.url);
+          console.log(typeof items.hn_clipboard);
+          console.log(items.hn_clipboard);
+          if (!(storyId in items.hn_clipboard)) {
+            console.log("Init story ", storyId);
+            items.hn_clipboard[storyId] = {
+              url: tab.url,
+              title: tab.title,
+              comments: new Array(),
+            };
+            console.log(items.hn_clipboard);
+          } else {
+            console.log("Story is in the clipboard", storyId);
+            console.log(JSON.stringify(items.hn_clipboard, null, 4));
+          }
           for (comment of response.comments) {
             console.log(comment);
-            items.hn_clipboard.push(comment);
+            items.hn_clipboard[storyId].comments.push(comment);
           }
           chrome.storage.local.set(
             { hn_clipboard: items.hn_clipboard },
