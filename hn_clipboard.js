@@ -1,3 +1,22 @@
+function stripHTML(html)
+{
+   let tmp = document.createElement("div");
+   tmp.innerHTML = html;
+   cleanLinksText(tmp);
+   tmp.innerHTML = tmp.innerHTML.replace('<p>', '\n</p>');
+   return  tmp.textContent || tmp.innerText || "";
+}
+
+function cleanLinksText(element)
+{
+  a_elts = element.querySelectorAll("a");
+  for (a of a_elts) {
+    console.log(a.getAttribute("href"));
+    a.innerText = " " + a.getAttribute("href") + " ";
+  }
+  console.log(element)
+}
+
 function getSelectionHTML() {
   var userSelection;
   if (window.getSelection) {
@@ -29,6 +48,11 @@ main_div = document.querySelector("div.cards");
 select_elt = document.querySelector("select#stories-select-id");
 select_elt.addEventListener("change", function () {
   updateActiveStory(select_elt);
+});
+
+export_to_txt_btn = document.querySelector("button#export-to-txt");
+export_to_txt_btn.addEventListener("click", function() {
+  exportToText();
 });
 
 chrome.storage.local.get(["hn_clipboard"], function (items) {
@@ -150,6 +174,50 @@ function updateActiveStory(selected) {
   chrome.storage.local.get(["hn_clipboard"], function (items) {
     if (storyId in items.hn_clipboard) {
       showStories(items.hn_clipboard[storyId]);
+    }
+  });
+}
+
+function exportToText() {
+  const storyId = select_elt.options[select_elt.selectedIndex].value;
+  console.log("Selected = ", storyId);
+  chrome.storage.local.get(["hn_clipboard"], function (items) {
+    if (storyId in items.hn_clipboard) {
+      console.log(items.hn_clipboard[storyId].url);
+      console.log(items.hn_clipboard[storyId].title);
+      console.log(items.hn_clipboard[storyId].comments);
+      fileContent = "";
+      for (selection of items.hn_clipboard[storyId].comments) {
+        if (selection === null) {
+          continue;
+        }
+        console.log(selection);
+        fileContent +=
+          stripHTML(selection).trim() + "\n" + "-------------------------\n";
+      }
+      console.log("File content:");
+      console.log(fileContent);
+
+      const filename = `story-${storyId}.txt`;
+      const blob = new Blob([fileContent], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      chrome.downloads.download(
+        {
+          url: "data:text/plain," + encodeURIComponent(fileContent),
+          filename: filename,
+          conflictAction: "prompt",
+        },
+        function (downloadId) {
+          console.log("File has been saved with ID: " + downloadId);
+          // not recognized
+          // chrome.downloads.showDefaultFolder(downloadId);
+        }
+      );
+      // const anchor = document.createElement("a");
+      // anchor.href = url;
+      // anchor.download = filename;
+      // anchor.click();
+      // anchor.remove();
     }
   });
 }

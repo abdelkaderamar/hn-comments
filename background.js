@@ -186,17 +186,6 @@ function getStoryId(url)
 function exportToText() {
   console.log("Export to text");
   chrome.storage.local.get(["hn_clipboard"], function(items) {
-    fileContent = "";
-    for (selection of items.hn_clipboard) {
-      if (selection === null) {
-        continue;
-      }
-      console.log(selection);
-      fileContent += stripHTML(selection).trim() + '\n' + '-------------------------\n';
-    }
-    console.log("File content:");
-    console.log(fileContent);
-
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       filename = "hn-story.txt";
       var currentTab = tabs[0];
@@ -211,7 +200,23 @@ function exportToText() {
       if (storyId != currentTabUrl) {
         filename = `hn-story-${storyId}.txt`;
       }
+      else {
+        storyId = null;
+      }
       console.log("Filename = ", filename);
+
+      fileContent = "";
+      if (storyId) {
+        for (selection of items.hn_clipboard[storyId]) {
+          if (selection === null) {
+            continue;
+          }
+          console.log(selection);
+          fileContent += stripHTML(selection).trim() + '\n' + '-------------------------\n';
+        }
+        console.log("File content:");
+        console.log(fileContent);
+      }
 
       chrome.downloads.download(
         {
