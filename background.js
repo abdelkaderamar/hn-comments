@@ -5,7 +5,7 @@ const clipboard_filter = ["chrome-extension://lepieaakpbahcminjicfhaidjhdklomp/h
 const all_filter = hn_filter.concat(clipboard_filter);
 
 console.log("Initialising the clipboard");
-chrome.storage.local.set({ hn_clipboard: new Array() }, function () {
+chrome.storage.local.set({ hn_clipboard: new Map() }, function () {
   console.log("Clipboard initialized");
 });
 
@@ -40,6 +40,7 @@ addMenuItem("show-hn-clipboard", "Show to HN clipboard", ["all"]);
 addMenuSeparator(2);
 addMenuItem("export-to-text", "Export to text", ["all"], all_filter);
 addMenuItem("export-to-yaml", "Export to YAML", ["all"], all_filter);
+addMenuItem("export-to-md", "Export to Markdown", ["all"], all_filter);
 addMenuSeparator(3, all_filter);
 addMenuItem("clear-hn-clipboard", "Clear HN clipboard", ["all"], all_filter);
 addMenuItem("hn-clipboard-edit", "Update selection", ["selection"], clipboard_filter);
@@ -65,6 +66,10 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
   if (info.menuItemId === "export-to-yaml") {
     exportToYaml();
+    return;
+  }
+  if (info.menuItemId === "export-to-md") {
+    exportToMarkdown();
     return;
   }
   if (info.menuItemId === "clear-hn-clipboard") {
@@ -94,7 +99,24 @@ function addSelectionToClipboard() {
         console.log("response.body         = ", response.body);
         console.log("typeof(response.body) = ", typeof(response.body));
         chrome.storage.local.get(["hn_clipboard"], function (items) {
-          items.hn_clipboard.push(response.body);
+          storyId = getStoryId(tab.url);
+          console.log(typeof(items.hn_clipboard));
+          console.log(items.hn_clipboard);
+          if (! (storyId in items.hn_clipboard)) {
+            console.log("Init story ", storyId);
+            items.hn_clipboard[storyId] = {
+              url: tab.url,
+              title: tab.title,
+              comments: new Array(),
+            };
+            console.log(items.hn_clipboard);
+          }
+          else {
+            console.log("Story is in the clipboard", storyId);
+            console.log(JSON.stringify(items.hn_clipboard, null, 4));
+          }
+          items.hn_clipboard[storyId].comments.push(response.body);
+
           chrome.storage.local.set({ hn_clipboard: items.hn_clipboard }, function () {
             console.log("Value is set to ", items.hn_clipboard);
           });
@@ -111,18 +133,21 @@ function addSelectionToClipboard() {
 }
 
 function clearHnClipboard() {
-  HnClipboard = new Array();
-  chrome.storage.local.set({ hn_clipboard: HnClipboard }, function () {
-    console.log("Value is set to " + HnClipboard);
+  chrome.storage.local.set({ hn_clipboard: new Map() }, function () {
+    console.log("Value is set to " + new Map());
   });
 }
 
 function showHnClipboard() {
-  chrome.tabs.create(
-    {
-      url: chrome.runtime.getURL('hn_clipboard.html')
-    }
-  );
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    var currentStory = getStoryId(tabs[0].url);
+    chrome.storage.local.set({ current_story: currentStory }, function () {
+      console.log("Current story is ", currentStory);
+    });
+    chrome.tabs.create({
+      url: chrome.runtime.getURL("hn_clipboard.html"),
+    });
+  });
 }
 
 function cleanLinksText(element)
@@ -142,6 +167,20 @@ function stripHTML(html)
    cleanLinksText(tmp);
    tmp.innerHTML = tmp.innerHTML.replace('<p>', '\n</p>');
    return  tmp.textContent || tmp.innerText || "";
+}
+
+function getStoryId(url) 
+{
+  console.log("Get the story id of url ", url);
+  storyId = url.replace(
+    "https://news.ycombinator.com/item?id=",
+    ""
+  );
+  if (storyId === url) {
+    storyId = "all";
+  }
+  console.log("storyId = ", storyId);
+  return  storyId;
 }
 
 function exportToText() {
