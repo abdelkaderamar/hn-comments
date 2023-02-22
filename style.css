@@ -1,0 +1,39 @@
+.stories-select
+{
+  padding: 6px;
+  margin: 3px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.export-btn-txt
+{
+  margin: 3px;
+  padding: 6px;
+  background-color: grey;
+  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 1ex
+}
+.export-btn-yaml
+{
+  margin: 3px;
+  padding: 6px;
+  background-color: greenyellow;
+  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 1ex
+}
+.export-btn-md
+{
+  margin: 3px;
+  padding: 6px;
+  background-color: aqua;
+  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 1ex
+}
+.clear-clipboard-btn
+{
+  margin: 3px;
+  padding: 6px;
+  background-color: coral;
+  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 1ex
+}
