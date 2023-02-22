@@ -41,7 +41,7 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     sendResponse({
       body: selection,
       url: window.location.href,
-      subject: title,
+      title: title,
       story_url: story_url,
     });
   }
