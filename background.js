@@ -38,11 +38,11 @@ addMenuItem(
 addMenuSeparator(1);
 addMenuItem("show-hn-clipboard", "Show to HN clipboard", ["all"]);
 addMenuSeparator(2);
-addMenuItem("export-to-text", "Export to text", ["all"], all_filter);
-addMenuItem("export-to-yaml", "Export to YAML", ["all"], all_filter);
-addMenuItem("export-to-md", "Export to Markdown", ["all"], all_filter);
-addMenuSeparator(3, all_filter);
-addMenuItem("clear-hn-clipboard", "Clear HN clipboard", ["all"], all_filter);
+addMenuItem("export-to-text", "Export to text", ["all"]);
+addMenuItem("export-to-yaml", "Export to YAML", ["all"]);
+addMenuItem("export-to-md", "Export to Markdown", ["all"]);
+addMenuSeparator(3);
+addMenuItem("clear-hn-clipboard", "Clear HN clipboard", ["all"]);
 addMenuItem("hn-clipboard-edit", "Update selection", ["selection"], clipboard_filter);
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
@@ -52,7 +52,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
   if (info.menuItemId === "extract-comments-with-links") {
-    extractCommantsWithLinks();
+    extractCommentsWithLinks();
     return;
   }
   if (info.menuItemId === "show-hn-clipboard") {
@@ -69,7 +69,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     return;
   }
   if (info.menuItemId === "export-to-md") {
-    exportToMarkdown();
+    exportToMd();
     return;
   }
   if (info.menuItemId === "clear-hn-clipboard") {
@@ -121,6 +121,9 @@ function addSelectionToClipboard() {
           chrome.storage.local.set({ hn_clipboard: items.hn_clipboard }, function () {
             console.log("Value is set to ", items.hn_clipboard);
           });
+          chrome.storage.local.set({ current_story: storyId }, function () {
+            console.log("Current story is ", storyId);
+          });
         });
 
         chrome.storage.local.get(["hn_clipboard"], function (items) {
@@ -133,169 +136,7 @@ function addSelectionToClipboard() {
   });
 }
 
-function clearHnClipboard() {
-  chrome.storage.local.set({ hn_clipboard: new Map() }, function () {
-    console.log("Value is set to " + new Map());
-  });
-}
-
-function showHnClipboard() {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    var currentStory = getStoryId(tabs[0].url);
-    chrome.storage.local.set({ current_story: currentStory }, function () {
-      console.log("Current story is ", currentStory);
-    });
-    chrome.tabs.create({
-      url: chrome.runtime.getURL("hn_clipboard.html"),
-    });
-  });
-}
-
-function cleanLinksText(element)
-{
-  a_elts = element.querySelectorAll("a");
-  for (a of a_elts) {
-    console.log(a.getAttribute("href"));
-    a.innerText = " " + a.getAttribute("href") + " ";
-  }
-  console.log(element)
-}
-
-function stripHTML(html)
-{
-   let tmp = document.createElement("div");
-   tmp.innerHTML = html;
-   cleanLinksText(tmp);
-   tmp.innerHTML = tmp.innerHTML.replace('<p>', '\n</p>');
-   return  tmp.textContent || tmp.innerText || "";
-}
-
-function getStoryId(url) 
-{
-  console.log("Get the story id of url ", url);
-  storyId = url.replace(
-    "https://news.ycombinator.com/item?id=",
-    ""
-  );
-  if (storyId === url) {
-    storyId = "all";
-  }
-  console.log("storyId = ", storyId);
-  return  storyId;
-}
-
-function exportToText() {
-  console.log("Export to text");
-  chrome.storage.local.get(["hn_clipboard"], function(items) {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      filename = "hn-story.txt";
-      var currentTab = tabs[0];
-      var currentTabUrl = currentTab.url;
-      console.log(currentTabUrl);
-      storyId = currentTabUrl.replace(
-        "https://news.ycombinator.com/item?id=",
-        ""
-      );
-      console.log("currentTabUrl = ", currentTabUrl);
-      console.log("storyId       = ", storyId);
-      if (storyId != currentTabUrl) {
-        filename = `hn-story-${storyId}.txt`;
-      }
-      else {
-        storyId = null;
-      }
-      console.log("Filename = ", filename);
-
-      fileContent = "";
-      if (storyId) {
-        for (selection of items.hn_clipboard[storyId]) {
-          if (selection === null) {
-            continue;
-          }
-          console.log(selection);
-          fileContent += stripHTML(selection).trim() + '\n' + '-------------------------\n';
-        }
-        console.log("File content:");
-        console.log(fileContent);
-      }
-
-      chrome.downloads.download(
-        {
-          url: "data:text/plain," + encodeURIComponent(fileContent),
-          filename: filename,
-          conflictAction: "prompt",
-        },
-        function (downloadId) {
-          console.log("File has been saved with ID: " + downloadId);
-          // not recognized
-          // chrome.downloads.showDefaultFolder(downloadId);
-        }
-      );
-    });
-
-  });
-}
-
-function exportToYaml() {
-  console.log("Export to YAML");
-  chrome.storage.local.get(["hn_clipboard"], function(items) {
-    fileContent = "";
-    for (selection of items.hn_clipboard) {
-      if (selection === null) {
-        continue;
-      }
-      console.log(selection);
-      const textContent = stripHTML(selection);
-      lines = textContent.trim().split('\n');
-      let yamlDoc = 'comment: | \n';
-      for (line of lines) {
-        yamlDoc += ' ' + line + '\n';
-      }
-      yamlDoc += '---\n';
-      fileContent += yamlDoc;
-    }
-    console.log("File content:");
-    console.log(fileContent);
-
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      yamlFilename = "hn-story.yaml";
-      var currentTab = tabs[0];
-      var currentTabUrl = currentTab.url;
-
-      fileContent = '---' + '\n' + 
-        'story_url: ' + currentTabUrl + '\n' + 
-        '---' + '\n' +
-        fileContent;
-
-      storyId = currentTabUrl.replace(
-        "https://news.ycombinator.com/item?id=",
-        ""
-      );
-      console.log("currentTabUrl = ", currentTabUrl);
-      console.log("storyId       = ", storyId);
-      if (storyId != currentTabUrl) {
-        yamlFilename = `hn-story-${storyId}.yaml`;
-      }
-      console.log("Yaml Filename = ", yamlFilename);
-
-      chrome.downloads.download(
-        {
-          url: "data:text/yaml," + encodeURIComponent(fileContent),
-          filename: yamlFilename,
-          conflictAction: "prompt",
-        },
-        function (downloadId) {
-          console.log("File has been saved with ID: " + downloadId);
-          // not recognized
-          // chrome.downloads.showDefaultFolder(downloadId);
-        }
-      );
-    });
-
-  });
-}
-
-function extractCommantsWithLinks() {
+function extractCommentsWithLinks() {
   console.log("Extract comments with links: ");
   let queryOptions = { active: true, lastFocusedWindow: true };
   chrome.tabs.query(queryOptions, (tabs) => {
@@ -335,11 +176,120 @@ function extractCommantsWithLinks() {
               console.log("Value is set to ", items.hn_clipboard);
             }
           );
+          chrome.storage.local.set({ current_story: storyId }, function () {
+            console.log("Current story is ", storyId);
+          });
+
         });
       }
     );
   });
 }
+
+function showHnClipboard() {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    var currentStory = getStoryId(tabs[0].url);
+    chrome.storage.local.set({ current_story: currentStory }, function () {
+      console.log("Current story is ", currentStory);
+    });
+    chrome.tabs.create({
+      url: chrome.runtime.getURL("hn_clipboard.html"),
+    });
+  });
+}
+
+function clearHnClipboard() {
+  chrome.storage.local.set({ hn_clipboard: new Map() }, function () {
+    console.log("Value is set to " + new Map());
+  });
+}
+
+function cleanLinksText(element)
+{
+  a_elts = element.querySelectorAll("a");
+  for (a of a_elts) {
+    console.log(a.getAttribute("href"));
+    a.innerText = " " + a.getAttribute("href") + " ";
+  }
+  console.log(element)
+}
+
+function stripHTML(html)
+{
+   let tmp = document.createElement("div");
+   tmp.innerHTML = html;
+   cleanLinksText(tmp);
+   tmp.innerHTML = tmp.innerHTML.replace('<p>', '\n</p>');
+   return  tmp.textContent || tmp.innerText || "";
+}
+
+function getStoryId(url) 
+{
+  console.log("Get the story id of url ", url);
+  storyId = url.replace(
+    "https://news.ycombinator.com/item?id=",
+    ""
+  );
+  if (storyId === url) {
+    storyId = "all";
+  }
+  console.log("storyId = ", storyId);
+  return  storyId;
+}
+
+function exportToText() {
+  console.log("Export to text");
+
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    var currentTab = tabs[0];
+    var currentTabUrl = currentTab.url;
+    storyId = currentTabUrl.replace(
+      "https://news.ycombinator.com/item?id=",
+      ""
+    );
+    console.log("currentTabUrl = ", currentTabUrl);
+    console.log("storyId       = ", storyId);
+    if (storyId != currentTabUrl) {
+      exportStoryCommentsToText(storyId);
+    }
+  });
+}
+
+function exportToYaml() {
+  console.log("Export to YAML");
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    var currentTab = tabs[0];
+    var currentTabUrl = currentTab.url;
+    storyId = currentTabUrl.replace(
+      "https://news.ycombinator.com/item?id=",
+      ""
+    );
+    console.log("currentTabUrl = ", currentTabUrl);
+    console.log("storyId       = ", storyId);
+    if (storyId != currentTabUrl) {
+      exportStoryCommentsToYaml(storyId);
+    }
+  });  
+}
+
+function exportToMd() {
+  console.log("Export to Markdown");
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    var currentTab = tabs[0];
+    var currentTabUrl = currentTab.url;
+    storyId = currentTabUrl.replace(
+      "https://news.ycombinator.com/item?id=",
+      ""
+    );
+    console.log("currentTabUrl = ", currentTabUrl);
+    console.log("storyId       = ", storyId);
+    if (storyId != currentTabUrl) {
+      exportStoryCommentsToMd(storyId);
+    }
+  });  
+}
+
+
 
 chrome.commands.onCommand.addListener((command) => {
   console.log(`# Command "${command}" triggered`);
