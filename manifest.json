@@ -13,11 +13,11 @@
   "content_scripts": [
     {
       "matches": ["*://news.ycombinator.com/*", "*://*/hn_clipboard.html"],
-      "js": ["hn-comments.js"]
+      "js": ["utility.js", "hn-comments.js"]
     }
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["utility.js", "background.js"]
   },
   "commands": {
     "add-selected": {

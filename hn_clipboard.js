@@ -60,6 +60,16 @@ export_to_yaml_btn.addEventListener("click", function() {
   exportToYaml();
 });
 
+export_to_md_btn = document.querySelector("button#export-to-md");
+export_to_md_btn.addEventListener("click", function() {
+  exportToMd();
+});
+
+clear_clipboard_btn = document.querySelector("button#clear-hn-cb");
+clear_clipboard_btn.addEventListener("click", function() {
+  clearClipboard();
+});
+
 
 chrome.storage.local.get(["hn_clipboard"], function (items) {
   console.log("Items stored: ", items);
@@ -189,93 +199,27 @@ function updateActiveStory(selected) {
 function exportToText() {
   const storyId = select_elt.options[select_elt.selectedIndex].value;
   console.log("Selected = ", storyId);
-  chrome.storage.local.get(["hn_clipboard"], function (items) {
-    if (storyId in items.hn_clipboard) {
-      console.log(items.hn_clipboard[storyId].story_url);
-      console.log(items.hn_clipboard[storyId].url);
-      console.log(items.hn_clipboard[storyId].title);
-      console.log(items.hn_clipboard[storyId].comments);
-      fileContent = "";
-      for (selection of items.hn_clipboard[storyId].comments) {
-        if (selection === null) {
-          continue;
-        }
-        console.log(selection);
-        fileContent +=
-          stripHTML(selection).trim() + "\n" + "-------------------------\n";
-      }
-      console.log("File content:");
-      console.log(fileContent);
 
-      const filename = `story-${storyId}.txt`;
-      const blob = new Blob([fileContent], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      chrome.downloads.download(
-        {
-          url: "data:text/plain," + encodeURIComponent(fileContent),
-          filename: filename,
-          conflictAction: "prompt",
-        },
-        function (downloadId) {
-          console.log("File has been saved with ID: " + downloadId);
-          // not recognized
-          // chrome.downloads.showDefaultFolder(downloadId);
-        }
-      );
-    }
-  });
+  exportStoryCommentsToText(storyId);
 }
 
 function exportToYaml() {
   const storyId = select_elt.options[select_elt.selectedIndex].value;
   console.log("Selected = ", storyId);
-  chrome.storage.local.get(["hn_clipboard"], function (items) {
-    if (storyId in items.hn_clipboard) {
-      console.log(items.hn_clipboard[storyId].story_url);
-      console.log(items.hn_clipboard[storyId].url);
-      console.log(items.hn_clipboard[storyId].title);
-      console.log(items.hn_clipboard[storyId].comments);
-      fileContent = "";
-      for (selection of items.hn_clipboard[storyId].comments) {
-        if (selection === null) {
-          continue;
-        }
-        console.log(`selection = ${selection}`);
-        const textContent = stripHTML(selection);
-        lines = textContent.trim().split('\n');
-        let yamlDoc = 'comment: | \n';
-        for (line of lines) {
-          yamlDoc += ' ' + line + '\n';
-        }
-        yamlDoc += '---\n';
-        fileContent += yamlDoc;
-      }
 
-      fileContent = '---' + '\n' + 
-      'title: ' + items.hn_clipboard[storyId].title + '\n' + 
-      'story_url: ' + items.hn_clipboard[storyId].story_url + '\n' + 
-      'url: ' + items.hn_clipboard[storyId].url + '\n' + 
-        '---' + '\n' +
-        fileContent;
+  exportStoryCommentsToYaml(storyId);
+}
 
-      console.log("File content:");
-      console.log(fileContent);
+function exportToMd() {
+  const storyId = select_elt.options[select_elt.selectedIndex].value;
+  console.log("Selected = ", storyId);
 
-      const filename = `story-${storyId}.yaml`;
-      const blob = new Blob([fileContent], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      chrome.downloads.download(
-        {
-          url: "data:text/yaml," + encodeURIComponent(fileContent),
-          filename: filename,
-          conflictAction: "prompt",
-        },
-        function (downloadId) {
-          console.log("File has been saved with ID: " + downloadId);
-          // not recognized
-          // chrome.downloads.showDefaultFolder(downloadId);
-        }
-      );
-    }
-  });
+  exportStoryCommentsToMd(storyId);
+}
+
+function clearClipboard() {
+  const storyId = select_elt.options[select_elt.selectedIndex].value;
+  console.log("Selected = ", storyId);
+
+  clearStoryClipboard(storyId);
 }
