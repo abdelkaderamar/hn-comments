@@ -35,10 +35,15 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     console.log("Add selection to clipboard");
     var selection = window.getSelectionHTML();
     console.log("Selection = ", selection);
+    story_url = document.querySelector("span.titleline>a").getAttribute("href");
+    title = document.querySelector("span.titleline>a").innerText;
+    console.log("Story url = ", story_url);
     sendResponse({
       body: selection,
       url: window.location.href,
-      subject: document.title});
+      subject: title,
+      story_url: story_url,
+    });
   }
   else if (msg.command === "get-comments-with-links") {
     console.log("Extract comments with link");
@@ -61,10 +66,14 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
     }
     console.log("spansWithLink = ", spansWithLink);
     console.log("document.url = ", window.location.href);
+    story_url = document.querySelector("span.titleline>a").getAttribute("href");
+    title = document.querySelector("span.titleline>a").innerText;
+    console.log("Story url = ", story_url);
     sendResponse({
       comments: spansWithLink,
       url: window.location.hef,
-      subject: document.title
+      title: title,
+      story_url: story_url,
     });
   }
   else {
