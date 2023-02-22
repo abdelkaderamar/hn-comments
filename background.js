@@ -105,8 +105,9 @@ function addSelectionToClipboard() {
           if (! (storyId in items.hn_clipboard)) {
             console.log("Init story ", storyId);
             items.hn_clipboard[storyId] = {
-              url: tab.url,
-              title: tab.title,
+              story_url: tab.url,
+              title: response.title,
+              url: response.story_url,
               comments: new Array(),
             };
             console.log(items.hn_clipboard);
@@ -262,7 +263,7 @@ function exportToYaml() {
       var currentTabUrl = currentTab.url;
 
       fileContent = '---' + '\n' + 
-        'url: ' + currentTabUrl + '\n' + 
+        'story_url: ' + currentTabUrl + '\n' + 
         '---' + '\n' +
         fileContent;
 
@@ -314,8 +315,9 @@ function extractCommantsWithLinks() {
           if (!(storyId in items.hn_clipboard)) {
             console.log("Init story ", storyId);
             items.hn_clipboard[storyId] = {
-              url: tab.url,
-              title: tab.title,
+              story_url: tab.url,
+              title: response.title,
+              url: response.story_url,
               comments: new Array(),
             };
             console.log(items.hn_clipboard);
