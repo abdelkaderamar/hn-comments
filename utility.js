@@ -13,8 +13,8 @@ function stripHTML(html)
    let tmp = document.createElement("div");
    tmp.innerHTML = html;
    cleanLinksText(tmp);
-   tmp.innerHTML = tmp.innerHTML.replace('<p>', '\n</p>');
-   return  tmp.textContent || tmp.innerText || "";
+   tmp.innerHTML = tmp.innerHTML.replaceAll('<p>', '\n<p>');
+   return tmp.innerText || tmp.textContent || "";
 }
 
 function getStoryId(url) 
