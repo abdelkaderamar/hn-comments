@@ -204,38 +204,6 @@ function clearHnClipboard() {
   });
 }
 
-function cleanLinksText(element)
-{
-  a_elts = element.querySelectorAll("a");
-  for (a of a_elts) {
-    console.log(a.getAttribute("href"));
-    a.innerText = " " + a.getAttribute("href") + " ";
-  }
-  console.log(element)
-}
-
-function stripHTML(html)
-{
-   let tmp = document.createElement("div");
-   tmp.innerHTML = html;
-   cleanLinksText(tmp);
-   tmp.innerHTML = tmp.innerHTML.replace('<p>', '\n</p>');
-   return  tmp.textContent || tmp.innerText || "";
-}
-
-function getStoryId(url) 
-{
-  console.log("Get the story id of url ", url);
-  storyId = url.replace(
-    "https://news.ycombinator.com/item?id=",
-    ""
-  );
-  if (storyId === url) {
-    storyId = "all";
-  }
-  console.log("storyId = ", storyId);
-  return  storyId;
-}
 
 function exportToText() {
   console.log("Export to text");

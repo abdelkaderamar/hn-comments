@@ -1,47 +1,4 @@
-function stripHTML(html)
-{
-   let tmp = document.createElement("div");
-   tmp.innerHTML = html;
-   cleanLinksText(tmp);
-   tmp.innerHTML = tmp.innerHTML.replace('<p>', '\n</p>');
-   return  tmp.textContent || tmp.innerText || "";
-}
 
-function cleanLinksText(element)
-{
-  a_elts = element.querySelectorAll("a");
-  for (a of a_elts) {
-    console.log(a.getAttribute("href"));
-    a.innerText = " " + a.getAttribute("href") + " ";
-  }
-  console.log(element)
-}
-
-function getSelectionHTML() {
-  var userSelection;
-  if (window.getSelection) {
-    // W3C Ranges
-    userSelection = window.getSelection();
-    // Get the range:
-    if (userSelection.getRangeAt) var range = userSelection.getRangeAt(0);
-    else {
-      var range = document.createRange();
-      range.setStart(userSelection.anchorNode, userSelection.anchorOffset);
-      range.setEnd(userSelection.focusNode, userSelection.focusOffset);
-    }
-    // And the HTML:
-    var clonedSelection = range.cloneContents();
-    var div = document.createElement("div");
-    div.appendChild(clonedSelection);
-    return div.innerHTML;
-  } else if (document.selection) {
-    // Explorer selection, return the HTML
-    userSelection = document.selection.createRange();
-    return userSelection.htmlText;
-  } else {
-    return "";
-  }
-}
 
 main_div = document.querySelector("div.cards");
 
