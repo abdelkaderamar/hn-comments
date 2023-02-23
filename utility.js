@@ -175,7 +175,7 @@ function exportStoryCommentsToMd(storyId) {
         console.log(`selection = ${selection}`);
         const textContent = stripHTML(selection);
         let mdDoc = "### comment\n";
-        mdDoc += textContent + "\n\n";
+        mdDoc += textContent.trim() + "\n\n";
 
         fileContent += mdDoc;
       }
