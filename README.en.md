@@ -18,7 +18,27 @@ You can use _HN Comment_ for the following operations:
 ## How to use the extension
 
 1. Select a text and add it to the clipboard: just select a text and use _Add selection to HN clipboard_ in extension's contextual menu.
+![Selection](screenshots/hn-comment-screenshot-01.png)
+
 2. Extract all comments containg a link
+![Extract comments with links](screenshots/hn-comment-screenshot-01b.png)
+
 3. Export to text, Yaml or Markdown format
+    * Text format
+![Export to text](screenshots/hn-comment-screenshot-02.png)
+    * Yaml format
+![Export to yaml](screenshots/hn-comment-screenshot-03.png)
+    * Markdown format
+![Export to text](screenshots/hn-comment-screenshot-04.png)
+
 4. Show the clipboard and manage a clipboard per story
-5. Clear the clipboard. When done from the contextual menu clear all the saved comments of all visited stories. The operation in the clipboard page, clear only the active story saved comments.
+![Show clipboard](screenshots/hn-comment-screenshot-08.png)
+![Show clipboard](screenshots/hn-comment-screenshot-05.png)
+
+5. Update selection
+![Update selection](screenshots/hn-comment-screenshot-06.png)
+![Update selection](screenshots/hn-comment-screenshot-07.png)
+
+6. Clear the clipboard. When done from the contextual menu clear all the saved comments of all visited stories. The operation in the clipboard page, clear only the active story saved comments.
+![Clear the clipboard](screenshots/hn-comment-screenshot-09.png)
+![Clear the clipboard](screenshots/hn-comment-screenshot-10.png)
