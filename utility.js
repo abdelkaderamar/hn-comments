@@ -57,6 +57,7 @@ function getSelectionHTML() {
   }
 }
 
+
 function exportStoryCommentsToText(storyId) {
   chrome.storage.local.get(["hn_clipboard"], function (items) {
     if (storyId in items.hn_clipboard) {
@@ -82,11 +83,16 @@ function exportStoryCommentsToText(storyId) {
       const filename = `story-${storyId}.txt`;
       const blob = new Blob([fileContent], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
+      console.log("Try to donwload the text file");
+      try {
       chrome.downloads.download(
         {
-          url: "data:text/plain," + encodeURIComponent(fileContent),
+          // url: "data:text/plain," + encodeURIComponent(fileContent),
+          url: URL.createObjectURL(blob),
           filename: filename,
-          conflictAction: "prompt",
+          saveAs: true,
+          // Not implemented in Firefox
+          // conflictAction: "prompt",
         },
         function (downloadId) {
           console.log("File has been saved with ID: " + downloadId);
@@ -94,6 +100,10 @@ function exportStoryCommentsToText(storyId) {
           // chrome.downloads.showDefaultFolder(downloadId);
         }
       );
+      }
+      catch (error) {
+        console.error(error);
+      }
     }
   });
 }
@@ -138,17 +148,25 @@ function exportStoryCommentsToYaml(storyId)
         "\n" +
         fileContent;
 
-      console.log("File content:");
+      console.log("## File content:");
       console.log(fileContent);
 
+      console.log("## Set filename ...");
       const filename = `story-${storyId}.yaml`;
-      const blob = new Blob([fileContent], { type: "text/plain" });
+      console.log("## Creating blog ...");
+      const blob = new Blob([fileContent], { type: "text/yaml" });
+      console.log("## Creating url ...");
       const url = URL.createObjectURL(blob);
+      console.log("## Starting download");
+      try {
       chrome.downloads.download(
         {
-          url: "data:text/yaml," + encodeURIComponent(fileContent),
+          // url: "data:text/plain," + encodeURIComponent(fileContent),
+          url: URL.createObjectURL(blob),
           filename: filename,
-          conflictAction: "prompt",
+          saveAs: true,
+          // Not implemented in Firefox
+          // conflictAction: "prompt",
         },
         function (downloadId) {
           console.log("File has been saved with ID: " + downloadId);
@@ -156,9 +174,14 @@ function exportStoryCommentsToYaml(storyId)
           // chrome.downloads.showDefaultFolder(downloadId);
         }
       );
+      }
+      catch (error) {
+        console.error(error);
+      }
     }
   });
 }
+
 
 function exportStoryCommentsToMd(storyId) {
   chrome.storage.local.get(["hn_clipboard"], function (items) {
@@ -200,9 +223,12 @@ function exportStoryCommentsToMd(storyId) {
       const url = URL.createObjectURL(blob);
       chrome.downloads.download(
         {
-          url: "data:text/markdown," + encodeURIComponent(fileContent),
+          // url: "data:text/markdown," + encodeURIComponent(fileContent),
+          url: URL.createObjectURL(blob),
           filename: filename,
-          conflictAction: "prompt",
+          saveAs: true,
+          // Not implemented in Firefox
+          // conflictAction: "prompt",
         },
         function (downloadId) {
           console.log("File has been saved with ID: " + downloadId);
@@ -210,6 +236,7 @@ function exportStoryCommentsToMd(storyId) {
           // chrome.downloads.showDefaultFolder(downloadId);
         }
       );
+      download.do_something();
     }
   });
 }
