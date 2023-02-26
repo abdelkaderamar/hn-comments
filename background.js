@@ -5,7 +5,7 @@ const clipboard_filter = ["chrome-extension://lepieaakpbahcminjicfhaidjhdklomp/h
 const all_filter = hn_filter.concat(clipboard_filter);
 
 console.log("Initialising the clipboard");
-chrome.storage.local.set({ hn_clipboard: new Map() }, function () {
+chrome.storage.local.set({ hn_clipboard: {} }, function () {
   console.log("Clipboard initialized");
 });
 
@@ -119,7 +119,7 @@ function addSelectionToClipboard() {
           items.hn_clipboard[storyId].comments.push(response.body);
 
           chrome.storage.local.set({ hn_clipboard: items.hn_clipboard }, function () {
-            console.log("Value is set to ", items.hn_clipboard);
+            console.log("## Value is set to ", JSON.stringify(items.hn_clipboard));
           });
           chrome.storage.local.set({ current_story: storyId }, function () {
             console.log("Current story is ", storyId);
@@ -173,7 +173,7 @@ function extractCommentsWithLinks() {
           chrome.storage.local.set(
             { hn_clipboard: items.hn_clipboard },
             function () {
-              console.log("Value is set to ", items.hn_clipboard);
+              console.log("** Value is set to ", items.hn_clipboard);
             }
           );
           chrome.storage.local.set({ current_story: storyId }, function () {
@@ -199,7 +199,7 @@ function showHnClipboard() {
 }
 
 function clearHnClipboard() {
-  chrome.storage.local.set({ hn_clipboard: new Map() }, function () {
+  chrome.storage.local.set({ hn_clipboard: {} }, function () {
     console.log("Value is set to " + new Map());
   });
 }

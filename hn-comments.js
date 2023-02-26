@@ -7,7 +7,7 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendResponse) {
   );
   if (msg.command === "get-selected-text") {
     console.log("Add selection to clipboard");
-    var selection = window.getSelectionHTML();
+    var selection = getSelectionHTML();
     console.log("Selection = ", selection);
     story_url = document.querySelector("span.titleline>a").getAttribute("href");
     title = document.querySelector("span.titleline>a").innerText;
