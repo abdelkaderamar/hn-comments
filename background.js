@@ -1,13 +1,9 @@
-const hn_filter = ["https://news.ycombinator.com/*"];
+const manifest = chrome.runtime.getManifest();
 
-const clipboard_filter = ["chrome-extension://lepieaakpbahcminjicfhaidjhdklomp/hn_clipboard.html"];
+const name = manifest.name;
+const version = manifest.version;
 
-const all_filter = hn_filter.concat(clipboard_filter);
-
-console.log("Initialising the clipboard");
-chrome.storage.local.set({ hn_clipboard: {} }, function () {
-  console.log("Clipboard initialized");
-});
+console.log(`You are using ${name} version ${version}.`);
 
 function addMenuItem(id, title, contexts, filter = hn_filter) {
   chrome.contextMenus.create({
@@ -27,6 +23,24 @@ function addMenuSeparator(id, filter = hn_filter) {
   });
 }
 
+const hn_filter = ["https://news.ycombinator.com/item?id=*"];
+
+clipboard_filter = [
+  "chrome-extension://lepieaakpbahcminjicfhaidjhdklomp/hn_clipboard.html",
+  "moz-extension://f86c239c-10ea-461c-baff-cfb52f54cb86/hn_clipboard.html"
+];
+
+
+const all_filter = hn_filter.concat(clipboard_filter);
+
+console.log(clipboard_filter);
+
+console.log("Initialising the clipboard");
+chrome.storage.local.set({ hn_clipboard: {} }, function () {
+  console.log("Clipboard initialized");
+});
+
+
 addMenuItem("add-to-hn-clipboard", "Add selection to HN clipboard", [
   "selection",
 ]);
@@ -43,7 +57,25 @@ addMenuItem("export-to-yaml", "Export to YAML", ["all"]);
 addMenuItem("export-to-md", "Export to Markdown", ["all"]);
 addMenuSeparator(3);
 addMenuItem("clear-hn-clipboard", "Clear HN clipboard", ["all"]);
-addMenuItem("hn-clipboard-edit", "Update selection", ["selection"], clipboard_filter);
+// addMenuItem("hn-clipboard-edit", "Update selection", ["selection"], clipboard_filter);
+
+if (typeof browser !== 'undefined') {
+  // Firefox
+  browser.runtime.getBrowserInfo().then((info) => {
+    const name = info.name;
+    const version = info.version;
+
+    console.log(`You are using ${name} version ${version}.`);
+
+    // Do something specific to the browser
+    if (name === 'Firefox') {
+      addMenuItem("hn-clipboard-edit", "Update selection", ["selection"], ["moz-extension://f86c239c-10ea-461c-baff-cfb52f54cb86/hn_clipboard.html"]);
+    } 
+  });
+}
+else {
+  addMenuItem("hn-clipboard-edit", "Update selection", ["selection"], ["chrome-extension://lepieaakpbahcminjicfhaidjhdklomp/hn_clipboard.html"]);
+}
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === "add-to-hn-clipboard") {
